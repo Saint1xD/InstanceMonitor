@@ -1,0 +1,25 @@
+services:
+  backend_api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: instance-monitor-backend-node
+    ports:
+      # Port 5001 on your computer will be mapped to port 8080 inside the backend container.
+      - "5001:8080"
+    env_file:
+      - ./.env
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: instance-monitor-frontend-node
+    ports:
+      - "80:80"
+    depends_on:
+      - backend_api
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    restart: always

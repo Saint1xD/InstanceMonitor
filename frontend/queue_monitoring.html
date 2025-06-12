@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento de Filas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .status-conectado { background-color: #28a745; }
+        .status-desconectado { background-color: #dc3545; }
+        .status-inativo { background-color: #6c757d; }
+
+        #loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1050;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #e7f1ff;
+            color: #0c5460;
+        }
+
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+        }
+
+        .summary-badge {
+            font-size: 0.8em;
+            padding: 0.4em 0.8em;
+        }
+
+        .instance-summary-badges {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+        .page-title {
+            padding: 1rem;
+            background-color: #0d6efd;
+            color: white;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .accordion-header {
+            padding-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="page-title">
+            <h1><i class="fas fa-desktop me-2"></i>Monitoramento de Filas de Instâncias</h1>
+        </div>
+
+        <div id="alerts"></div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="instance-search-input" class="form-control" placeholder="Pesquisar por nome da instância...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <label class="input-group-text" for="sort-select"><i class="fas fa-sort-amount-down me-1"></i> Ordenar por</label>
+                    <select class="form-select" id="sort-select">
+                        <option value="name-asc" selected>Padrão (A-Z)</option>
+                        <option value="critical-status-desc">Status Crítico</option>
+                        <option value="disconnected-desc">Mais Desconectadas</option>
+                        <option value="connected-desc">Mais Conectadas</option>
+                        <option value="inactive-desc">Mais Inativas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="loading-indicator" class="text-center" style="display: none;">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">Buscando dados das filas...</p>
+        </div>
+
+        <div class="accordion" id="queues-accordion-container">
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="queue_monitoring.js"></script>
+</body>
+</html>
