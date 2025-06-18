@@ -1,4 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+    const moonIcon = themeToggle.querySelector('.fa-moon');
+    const sunIcon = themeToggle.querySelector('.fa-sun');
+
+    const applyTheme = (theme) => {
+        if (theme === 'dark') {
+            body.classList.add('dark-mode');
+            moonIcon.style.display = 'none';
+            sunIcon.style.display = 'inline-block';
+        } else {
+            body.classList.remove('dark-mode');
+            moonIcon.style.display = 'inline-block';
+            sunIcon.style.display = 'none';
+        }
+    };
+
+    themeToggle.addEventListener('click', () => {
+        const isDarkMode = body.classList.contains('dark-mode');
+        const newTheme = isDarkMode ? 'light' : 'dark';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+    });
+
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        applyTheme(savedTheme);
+    }
+
     let allInstancesData = [];
 
     loadQueueStatuses(false);
@@ -23,10 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAccordion(filteredData);
     }
 
-    /**
-     * Fetches queue statuses from the API.
-     * @param {boolean} isUpdate - True if this is a background refresh.
-     */
     async function loadQueueStatuses(isUpdate = false) {
         const loadingIndicator = document.getElementById('loading-indicator');
         if (!isUpdate) {
@@ -54,10 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /**
-     * Renders the entire accordion container based on the provided data.
-     * @param {Array} instancesData - The array of instances to display.
-     */
     function renderAccordion(instancesData) {
         const container = document.getElementById('queues-accordion-container');
         container.innerHTML = '';
@@ -77,11 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'Desconectado';
     };
 
-    /**
-     * Sorts an array of instances based on a specified criterion.
-     * @param {Array} instancesArray - The array of instances to sort.
-     * @param {string} sortBy - The sorting criterion (e.g., 'name-asc', 'disconnected-desc').
-     */
     function sortInstances(instancesArray, sortBy) {
         const countStatus = (instance, status) => {
             if (!instance.queues) return 0;
@@ -109,13 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function formatMillisecondsToHHMMSS(ms) {
+        if (ms === null || isNaN(ms) || ms <= 0) {
+            return '-';
+        }
 
-    /**
-     * Creates a full accordion item for a single instance.
-     * @param {object} instanceData - The data for one instance.
-     * @param {number} index - The unique index for the item.
-     * @returns {HTMLElement} The created accordion item div.
-     */
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        const paddedHours = String(hours).padStart(2, '0');
+        const paddedMinutes = String(minutes).padStart(2, '0');
+        const paddedSeconds = String(seconds).padStart(2, '0');
+
+        return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+    }
+
     function createInstanceAccordionItem(instanceData, index) {
         const accordionItemId = `instance-collapse-${index}`;
         const headerId = `instance-header-${index}`;
@@ -149,6 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <th>Nome da Fila</th>
                                     <th>Abertos</th>
                                     <th>Na Fila</th>
+                                    <th>Respondidos Hoje</th>
+                                    <th>T. Méd. Atend.</th>
                                     <th>Ag. Logados</th>
                                 </tr>
                             </thead>
@@ -163,15 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return accordionItemDiv;
     }
 
-    /**
-     * Updates the content of an existing accordion item.
-     * @param {HTMLElement} element - The accordion item div to update.
-     * @param {object} instanceData - The new data for the instance.
-     */
     function updateInstanceAccordionItem(element, instanceData) {
         const hasQueues = instanceData.queues && instanceData.queues.length > 0;
         let summaryHtml = '';
-        let tableBodyHtml = '<tr><td colspan="5" class="text-center text-muted">Nenhuma fila encontrada para esta instância.</td></tr>';
+        let tableBodyHtml = '<tr><td colspan="7" class="text-center text-muted">Nenhuma fila encontrada para esta instância.</td></tr>';
 
         if (hasQueues) {
             const connectedQueues = instanceData.queues.filter(q => getQueueStatusText(q) === 'Conectado').length;
@@ -187,12 +210,17 @@ document.addEventListener('DOMContentLoaded', () => {
             tableBodyHtml = instanceData.queues.map(queue => {
                 const statusText = getQueueStatusText(queue);
                 const statusClass = statusText.toLowerCase().replace(' ', '-');
+                const respondedChats = queue.todaysRespondedChats || 0;
+                const avgFirstAnswerTime = formatMillisecondsToHHMMSS(queue.todaysAvgContactTime);
+
                 return `
                     <tr>
                         <td><span class="status-dot status-${statusClass}"></span>${escapeHtml(statusText)}</td>
                         <td>${escapeHtml(queue.name)}</td>
                         <td>${queue.openChats}</td>
                         <td>${queue.chatsOnQueue}</td>
+                        <td>${respondedChats}</td>
+                        <td>${avgFirstAnswerTime}</td>
                         <td>${queue.loggedAgentsCount}</td>
                     </tr>`;
             }).join('');
@@ -202,14 +230,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         element.querySelector('.instance-summary-badges').innerHTML = summaryHtml;
         element.querySelector('tbody').innerHTML = tableBodyHtml;
+        if (!hasQueues) {
+             element.querySelector('tbody').innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhuma fila encontrada para esta instância.</td></tr>';
+        }
     }
 
-    /**
-     * Shows a dismissible alert message at the top of the page.
-     * @param {string} message - The message to display.
-     * @param {string} type - The Bootstrap alert type (e.g., 'danger', 'success').
-     * @param {number} duration - How long the alert should be visible (in ms).
-     */
     function showAlert(message, type = 'danger', duration = 7000) {
         const alertsContainer = document.getElementById('alerts');
         if (!alertsContainer) {
@@ -237,11 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, duration);
     }
 
-    /**
-     * Escapes HTML to prevent XSS attacks.
-     * @param {*} unsafe - The potentially unsafe string.
-     * @returns {string} The sanitized string.
-     */
     function escapeHtml(unsafe) {
         const text = unsafe === null || unsafe === undefined ? '' : String(unsafe);
         return text

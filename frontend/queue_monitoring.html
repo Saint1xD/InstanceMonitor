@@ -7,9 +7,71 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body {
-            background-color: #f8f9fa;
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --card-bg-color: #ffffff;
+            --border-color: #dee2e6;
+            --header-bg-color: #e7f1ff;
+            --header-text-color: #0c5460;
+            --input-bg-color: #ffffff;
+            --input-border-color: #ced4da;
         }
+
+        body.dark-mode {
+            --bg-color: #1a202c;
+            --text-color: #e2e8f0;
+            --card-bg-color: #2d3748;
+            --border-color: #4a5568;
+            --header-bg-color: #2c5282;
+            --header-text-color: #e2e8f0;
+            --input-bg-color: #2d3748;
+            --input-border-color: #4a5568;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .accordion-item, .card {
+            background-color: var(--card-bg-color);
+            border-color: var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .accordion-button {
+            background-color: var(--card-bg-color);
+            color: var(--text-color);
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: var(--header-bg-color);
+            color: var(--header-text-color);
+        }
+
+        .table {
+            color: var(--text-color);
+        }
+
+        .table-light {
+             --bs-table-bg: var(--header-bg-color);
+             --bs-table-border-color: var(--border-color);
+             color: var(--text-color);
+        }
+
+        .form-control, .form-select, .input-group-text {
+            background-color: var(--input-bg-color);
+            color: var(--text-color);
+            border-color: var(--input-border-color);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
         .status-dot {
             height: 12px;
             width: 12px;
@@ -28,11 +90,6 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 1050;
-        }
-
-        .accordion-button:not(.collapsed) {
-            background-color: #e7f1ff;
-            color: #0c5460;
         }
 
         .accordion-button:focus {
@@ -61,9 +118,36 @@
         .accordion-header {
             padding-right: 0.5rem;
         }
+
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1030;
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        #theme-toggle:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
+    <button id="theme-toggle" class="btn" title="Alternar tema">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun" style="display: none;"></i>
+    </button>
+
     <div class="container mt-4">
         <div class="page-title">
             <h1><i class="fas fa-desktop me-2"></i>Monitoramento de Filas de Instâncias</h1>
@@ -85,8 +169,8 @@
                         <option value="name-asc" selected>Padrão (A-Z)</option>
                         <option value="critical-status-desc">Status Crítico</option>
                         <option value="disconnected-desc">Mais Desconectadas</option>
-                        <option value="connected-desc">Mais Conectadas</option>
                         <option value="inactive-desc">Mais Inativas</option>
+                        <option value="connected-desc">Mais Conectadas</option>
                     </select>
                 </div>
             </div>
